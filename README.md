@@ -1,4 +1,4 @@
-# wireguard-config-generator
+# wireguard config generator
 Generate config files and qr codes for wireguard vpn
 
 You will need to install qrcode and pillow in python
