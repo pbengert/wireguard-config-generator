@@ -1,5 +1,9 @@
 import qrcode
 import subprocess
+import sys
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # This program will generate configs for wireguard.
 # you will need to install qrcode and pillow in python
@@ -9,35 +13,36 @@ import subprocess
 
 # Set the listen port
 
-listen_port = "51820"
+listen_port = f"{os.getenv('PORT')}"
 
 # Set the endpoint
-endpoint = f"example.myip.com:{listen_port}"
+endpoint = f"{os.getenv('ENDPOINT_URL')}:{listen_port}"
 
 # Number of needed clients
-clients = 3
+clients = 1
 
 # Set preshared_key to True to create preshared keys or False if not needed
 preshared_key = True
 
 # Set your DNS Server like "1.1.1.1" or empty string "" if not needed
 # maybe you want to use a dns server on your server e.g. 192.168.1.1
-dns = "1.1.1.1"
+dns = f"{os.getenv('DNS')}"
 
 # Set your vpn tunnel network (example is for 10.99.99.0/24)
-ipnet_tunnel_1 = 10
-ipnet_tunnel_2 = 99
-ipnet_tunnel_3 = 99
-ipnet_tunnel_4 = 0
-ipnet_tunnel_cidr = 24
+defaultTunnel = os.getenv('TUNNEL_NET').split('.')
+ipnet_tunnel_1 = int(defaultTunnel[0])
+ipnet_tunnel_2 = int(defaultTunnel[1])
+ipnet_tunnel_3 = int(defaultTunnel[2])
+ipnet_tunnel_4 = int(defaultTunnel[3].split('/')[0])
+ipnet_tunnel_cidr = int(defaultTunnel[3].split('/')[1])
 
 # Set allowed IPs (this should be the network of the server you want to access)
 # If you want to route all traffic over the VPN then set tunnel_0_0_0_0 = True, the network in allowed ips will then be ignored
-allowed_ips = "192.168.1.0/24"
+allowed_ips = f"{os.getenv('ALLOWEDIPS')}"
 tunnel_0_0_0_0 = False
 
 # If you need iptables rules then set iptables= "eth0" (replace eth0 with the name of your network card) or iptables = "" if no rules needed
-iptables = ""
+iptables = f"{os.getenv('IPTABLES')}"
 
 ################### Do not edit below this line ##################
 
@@ -46,7 +51,8 @@ wg_pub_keys = []
 wg_psk = []
 
 
-def main():
+def main(args):
+    # parseArgs(args)
     # Gen-Keys
     for _ in range(clients+1):
         (privkey, pubkey, psk) = generate_wireguard_keys()
@@ -126,6 +132,27 @@ def make_qr_code_png(text, filename):
     img = qrcode.make(text)
     img.save(f"{filename}")
 
+def parseArgs(args):
+    options, remainder = getopt.getopt(args, 'd', ['default'
+                                                         ])
+    # print 'OPTIONS   :', options
+
+    for opt, arg in options:
+        if opt in ('-d', '--default'):
+            return
+
+        # elif opt in ('-v', '--verbose'):
+        #     verbose = True
+        # elif opt == '--version':
+        #     version = arg
+
+    # print 'VERSION   :', version
+    # print 'VERBOSE   :', verbose
+    # print 'OUTPUT    :', output_filename
+    # print 'REMAINING :', remainder
+
+
+
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
